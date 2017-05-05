@@ -30,6 +30,16 @@ public class SimpleStringAdapter extends RecyclerView.Adapter<SimpleStringAdapte
         notifyDataSetChanged();
     }
 
+    public void clear() {
+        mStrings.clear();
+        notifyDataSetChanged();
+    }
+
+    public void addAtEnd(String string) {
+        mStrings.add(string);
+        notifyItemInserted(mStrings.size() - 1);
+    }
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.string_list_item, parent, false);

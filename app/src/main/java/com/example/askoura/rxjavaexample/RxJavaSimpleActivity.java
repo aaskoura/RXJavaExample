@@ -4,7 +4,7 @@ package com.example.askoura.rxjavaexample;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -13,7 +13,6 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Action;
 import io.reactivex.schedulers.Schedulers;
 
 public class RxJavaSimpleActivity extends AppCompatActivity {
@@ -24,6 +23,7 @@ public class RxJavaSimpleActivity extends AppCompatActivity {
     final Observable<Integer> serverDownloadObservable = Observable.create(emitter -> {
         for (int i = 0; i <= 10; i++) {
             SystemClock.sleep(500); // simulate delay
+            Log.v("", "emitting: " + i);
             emitter.onNext(i);
         }
         emitter.onComplete();
