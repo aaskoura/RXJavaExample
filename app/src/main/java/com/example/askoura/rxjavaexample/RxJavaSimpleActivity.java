@@ -13,16 +13,19 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
 import io.reactivex.schedulers.Schedulers;
 
 public class RxJavaSimpleActivity extends AppCompatActivity {
-    
+
     CompositeDisposable disposable = new CompositeDisposable();
-    public int value =0;
+    public int value = 0;
 
     final Observable<Integer> serverDownloadObservable = Observable.create(emitter -> {
-        SystemClock.sleep(10000); // simulate delay
-        emitter.onNext(5);
+        for (int i = 0; i <= 10; i++) {
+            SystemClock.sleep(500); // simulate delay
+            emitter.onNext(i);
+        }
         emitter.onComplete();
     });
 
@@ -32,14 +35,22 @@ public class RxJavaSimpleActivity extends AppCompatActivity {
         setContentView(R.layout.activity_rxjavasimple);
         View view = findViewById(R.id.button);
         view.setOnClickListener(v -> {
-            v.setEnabled(false); // disables the button until execution has finished
+            // if not disabled you can subscribe multiple times and it is quite mess
+            v.setEnabled(false);
             Disposable subscribe = serverDownloadObservable.
                     observeOn(AndroidSchedulers.mainThread()).
-                    subscribeOn(Schedulers.io()).
-                    subscribe(integer -> {
-                        updateTheUserInterface(integer); // this methods updates the ui
-                        v.setEnabled(true); // enables it again
-                    });
+                    doOnComplete(() -> v.setEnabled(true)).
+                    doOnDispose(() -> v.setEnabled(true)).
+                    // UI becomes unresponsive if I subscribe on UI thread
+                            subscribeOn(Schedulers.io()).
+                            subscribe(integer -> {
+                                updateTheUserInterface(integer);
+                            });
+            // a disposed compositeDisposable will not add a new disposable
+            // there is also no way to unDispose, must create a new one
+            if (disposable.isDisposed()) {
+                disposable = new CompositeDisposable();
+            }
             disposable.add(subscribe);
         });
     }
@@ -52,12 +63,20 @@ public class RxJavaSimpleActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (disposable!=null && !disposable.isDisposed()) {
+        dispose();
+    }
+
+    public void onClick(View view) {
+        Toast.makeText(this, "YESS!!", Toast.LENGTH_SHORT).show();
+    }
+
+    private void dispose() {
+        if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
     }
 
-    public void onClick(View view) {
-        Toast.makeText(this, "Still active " + value++, Toast.LENGTH_SHORT).show();
+    public void stop(View view) {
+        dispose();
     }
 }
